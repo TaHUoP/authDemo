@@ -3,6 +3,7 @@
  */
 package authDemo.controllers;
 
+import authDemo.controllers.api.UserRequest;
 import authDemo.models.User;
 import authDemo.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -32,22 +33,19 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public User createUser(@RequestParam String firstName, @RequestParam String lastName, @RequestParam String email) {
-        return repository.save(new User(firstName, lastName, email));
+    public User createUser(@RequestBody UserRequest request) {
+        return repository.save(request.createUser());
     }
 
-    @PatchMapping("/users/{id}")
-    public User updateUser(
-        @PathVariable String id,
-        @RequestParam(required = false) String firstName,
-        @RequestParam(required = false) String lastName,
-        @RequestParam(required = false) String email
-    ) {
+    @PutMapping("/users/{id}")
+    public User updateUser(@PathVariable String id, @RequestBody UserRequest request) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found"));
-        user.setFirstName(firstName != null ? firstName : user.getFirstName());
-        user.setLastName(lastName != null ? lastName : user.getLastName());
-        user.setEmail(email != null ? email : user.getEmail());
+
+        user.setFirstName(request.getFirstName() != null ? request.getFirstName() : user.getFirstName());
+        user.setLastName(request.getLastName() != null ? request.getLastName() : user.getLastName());
+        user.setEmail(request.getEmail() != null ? request.getEmail() : user.getEmail());
+
         return repository.save(user);
     }
 
