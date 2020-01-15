@@ -45,9 +45,9 @@ public class UserController {
     ) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found"));
-        user.firstName = firstName != null ? firstName : user.firstName;
-        user.lastName = lastName != null ? lastName : user.lastName;
-        user.email = email != null ? email : user.email;
+        user.setFirstName(firstName != null ? firstName : user.getFirstName());
+        user.setLastName(lastName != null ? lastName : user.getLastName());
+        user.setEmail(email != null ? email : user.getEmail());
         return repository.save(user);
     }
 
