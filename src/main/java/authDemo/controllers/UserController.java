@@ -3,15 +3,18 @@
  */
 package authDemo.controllers;
 
-import authDemo.controllers.api.UserRequest;
+import authDemo.controllers.api.CreateUserRequest;
+import authDemo.controllers.api.UpdateUserRequest;
 import authDemo.dto.UserDTO;
 import authDemo.models.User;
 import authDemo.repositories.UserRepository;
+import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,24 +22,28 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserRepository repository;
-
     private final ModelMapper modelMapper;
 
-    UserController(UserRepository repository, ModelMapper modelMapper) {
+    public UserController(UserRepository repository, ModelMapper modelMapper) {
         this.repository = repository;
         this.modelMapper = modelMapper;
     }
 
     @GetMapping("/users")
     public List<UserDTO> getUsers() {
-        return repository.findAll()
-            .stream()
-            .map(user -> modelMapper.map(user, UserDTO.class))
-            .collect(Collectors.toList());
+        List<UserDTO> users = repository.findAll()
+                .stream()
+                .map(user -> modelMapper.map(user, UserDTO.class))
+                .collect(Collectors.toList());
+
+        if (users.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
+        else
+            return users;
     }
 
     @GetMapping("/users/{id}")
-    public UserDTO getUser(@PathVariable String id) {
+    public UserDTO getUser(@PathVariable ObjectId id) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found"));
 
@@ -44,24 +51,20 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public UserDTO createUser(@RequestBody UserRequest request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDTO createUser(@Valid @RequestBody CreateUserRequest request) {
         return modelMapper.map(
-            repository.save(request.createUser()),
-            UserDTO.class
+                repository.save(request.createUser()),
+                UserDTO.class
         );
     }
 
     @PutMapping("/users/{id}")
-    public UserDTO updateUser(@PathVariable String id, @RequestBody UserRequest request) {
+    public UserDTO updateUser(@PathVariable ObjectId id, @Valid @RequestBody UpdateUserRequest request) {
         User user = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found"));
 
-        String firstName = request.getFirstName();
-        String lastName = request.getLastName();
-        String email = request.getEmail();
-        if (firstName != null) user.setFirstName(firstName);
-        if (lastName != null) user.setLastName(lastName);
-        if (email != null) user.setEmail(email);
+        request.populateUser(user);
 
         return modelMapper.map(
             repository.save(user),
@@ -70,8 +73,11 @@ public class UserController {
     }
 
     @DeleteMapping("/users/{id}")
-    public void deleteUser(@PathVariable String id) {
-        repository.deleteById(id);
+    public void deleteUser(@PathVariable ObjectId id) {
+        Long deletedCount = repository.deleteUserById(id);
+
+        if (deletedCount < 1)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
 }

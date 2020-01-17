@@ -3,22 +3,24 @@ package authDemo.controllers.api;
 import authDemo.models.User;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 
-public class UserRequest {
+public class UpdateUserRequest {
 
-    @NotBlank(message = "User firstName must not be blank")
+    @Pattern(regexp = "^[\\S]+.*[\\S]+$", message = "User firstName must not be blank")
     private String firstName;
 
-    @NotBlank(message = "User lastName must not be blank")
+    @Pattern(regexp = "^[\\S]+.*[\\S]+$", message = "User lastName must not be blank")
     private String lastName;
 
-    @NotBlank(message = "User email must not be blank")
+    @Pattern(regexp = "^[\\S]+.*[\\S]+$", message = "User email must not be blank")
     @Email(message = "User email must be compatible with RFC-5322")
     private String email;
 
-    public User createUser() {
-        return new User(firstName, lastName, email);
+    public void populateUser(User user) {
+        if (firstName != null) user.setFirstName(firstName);
+        if (lastName != null) user.setLastName(lastName);
+        if (email != null) user.setEmail(email);
     }
 
     public String getFirstName() {
