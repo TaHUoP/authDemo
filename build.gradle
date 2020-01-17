@@ -1,6 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.1.7.RELEASE'
+    id 'idea'
+    id 'org.springframework.boot' version '2.2.2.RELEASE'
     id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 }
 
@@ -15,7 +16,9 @@ dependencies {
     implementation 'org.springframework.data:spring-data-mongodb:2.2.3.RELEASE'
     implementation 'org.modelmapper:modelmapper:2.3.5'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+    testImplementation('org.springframework.boot:spring-boot-test')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
 
     components {
         withModule('org.springframework:spring-beans') {
@@ -31,4 +34,11 @@ dependencies {
 
 bootJar {
     mainClassName = 'authDemo.App'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
